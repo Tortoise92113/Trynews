@@ -2,3 +2,4 @@ python-dotenv
 requests
 notion-client
 feedparser
+google.generativeai
