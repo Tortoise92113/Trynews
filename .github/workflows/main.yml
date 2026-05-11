@@ -3,7 +3,7 @@ name: Run Trynews
 on:
   schedule:
    #- cron: "*/5 * * * *"
-    - cron: "13 6 * * *"
+    - cron: "34 5 * * *"
   workflow_dispatch:
 
 jobs:
