@@ -184,7 +184,6 @@ for s, n in scored:
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-active_cats = {cat: items for cat, items in categories.items() if items}
 cat_summaries = {cat: "" for cat in active_cats}
 
 if GEMINI_API_KEY and active_cats:
@@ -206,16 +205,26 @@ if GEMINI_API_KEY and active_cats:
             contents=prompt
         )
         raw = gemini_response.text.strip()
+        print(f"🔍 Gemini 原始回傳：{raw[:200]}")  # 只印前200字避免太長
+
+        # ✅ 修正：正確剝除 ```json ... ``` 的 markdown 包裝
         if raw.startswith("```"):
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
+            # 去掉開頭的 ``` 那行（可能是 ```json 或 ```）
+            raw = raw[raw.index("\n") + 1:]
+            # 去掉結尾的 ```
+            if raw.endswith("```"):
+                raw = raw[:raw.rfind("```")]
             raw = raw.strip()
-        parsed = json.loads(raw.strip())
+
+        parsed = json.loads(raw)
         if isinstance(parsed, dict):
             for cat in active_cats:
                 if cat in parsed:
                     cat_summaries[cat] = str(parsed[cat])
+        print(f"✅ 摘要產生成功：{list(cat_summaries.keys())}")
+    except json.JSONDecodeError as e:
+        print(f"⚠️ Gemini 回傳 JSON 解析失敗：{e}")
+        print(f"   原始內容：{raw}")
     except Exception as e:
         print(f"⚠️ Gemini 摘要失敗：{e}")
 
