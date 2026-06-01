@@ -210,6 +210,7 @@ if GEMINI_API_KEY and active_cats:
             raw = raw.split("```")[1]
             if raw.startswith("json"):
                 raw = raw[4:]
+            raw = raw.strip()
         parsed = json.loads(raw.strip())
         if isinstance(parsed, dict):
             for cat in active_cats:
