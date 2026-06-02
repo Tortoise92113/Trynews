@@ -183,14 +183,23 @@ for s, n in scored:
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-active_cats = {cat: items for cat, items in categories.items() if items}
-cat_summaries = {cat: "" for cat in active_cats}
 
-if GEMINI_API_KEY and active_cats:
+active_cats = {cat: items for cat, items in categories.items() if items}
+print(f"🔍 active_cats: {list(active_cats.keys())}")
+print(f"🔍 GEMINI_API_KEY: {'有設定' if GEMINI_API_KEY else '❌ 未設定，跳過摘要'}")
+
+cat_summaries = {
+    cat: ""
+    for cat, items in active_cats.items()
+    if cat != "Others" and len(items) > 1
+}
+
+if GEMINI_API_KEY and cat_summaries:
     sections = []
     for cat, items in active_cats.items():
-        titles = "\n".join(f"- {n['title']}" for _, n in items)
-        sections.append(f"[{cat}]\n{titles}")
+        if cat in cat_summaries:
+            titles = "\n".join(f"- {n['title']}" for _, n in items)
+            sections.append(f"[{cat}]\n{titles}")
     prompt = (
         "以下是各分類的新聞標題，請針對每個分類產生一段繁體中文整體摘要（50字以內），"
         "概括該分類的共同趨勢，直接輸出文字不加任何前綴。\n"
@@ -205,20 +214,17 @@ if GEMINI_API_KEY and active_cats:
             contents=prompt
         )
         raw = gemini_response.text.strip()
-        print(f"🔍 Gemini 原始回傳：{raw[:200]}")  # 只印前200字避免太長
+        print(f"🔍 Gemini 原始回傳：{raw[:200]}")
 
-        # ✅ 修正：正確剝除 ```json ... ``` 的 markdown 包裝
         if raw.startswith("```"):
-            # 去掉開頭的 ``` 那行（可能是 ```json 或 ```）
             raw = raw[raw.index("\n") + 1:]
-            # 去掉結尾的 ```
             if raw.endswith("```"):
                 raw = raw[:raw.rfind("```")]
             raw = raw.strip()
 
         parsed = json.loads(raw)
         if isinstance(parsed, dict):
-            for cat in active_cats:
+            for cat in cat_summaries:
                 if cat in parsed:
                     cat_summaries[cat] = str(parsed[cat])
         print(f"✅ 摘要產生成功：{list(cat_summaries.keys())}")
