@@ -183,7 +183,7 @@ for s, n in scored:
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
+active_cats = {cat: items for cat, items in categories.items() if items}
 cat_summaries = {cat: "" for cat in active_cats}
 
 if GEMINI_API_KEY and active_cats:
