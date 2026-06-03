@@ -5,7 +5,6 @@ from google import genai
 from notion_client import Client
 from datetime import datetime, timezone, date
 from zoneinfo import ZoneInfo
-from dotenv import load_dotenv
 
 TW_TZ = ZoneInfo("Asia/Taipei")
 
@@ -181,7 +180,7 @@ for s, n in scored:
 
 # ====== 6️⃣ 用 Gemini 產生分類摘要 ======
 
-load_dotenv()
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 active_cats = {cat: items for cat, items in categories.items() if items}
