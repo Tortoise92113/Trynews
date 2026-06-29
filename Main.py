@@ -27,7 +27,7 @@ good_sources = [
 ]
 
 bad_sources = [
-    "Yahoo新聞", "Yahoo股市", "ETtoday星光雲", "噓！星聞"
+    "Yahoo新聞", "Yahoo股市", "ETtoday星光雲", "噓！星聞","自由時報"
 ]
 
 # 財經股市相關關鍵字（用來判斷是否需要日期過濾）
