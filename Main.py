@@ -80,6 +80,14 @@ rss_list = [
     "https://news.google.com/rss/search?q=台股&hl=zh-TW&gl=TW&ceid=TW:zh-Hant"
 ]
 
+# 沒有 UA 的話，來自雲端機房（例如 GitHub Actions）的請求常被 Google 擋掉或回空結果
+RSS_REQUEST_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    )
+}
+
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), "seen_titles.json")
 
 def load_prev_titles() -> set:
@@ -100,7 +108,12 @@ news_list = []
 seen_this_run = set()
 
 for rss_url in rss_list:
-    feed = feedparser.parse(rss_url)
+    feed = feedparser.parse(rss_url, request_headers=RSS_REQUEST_HEADERS)
+    print(
+        f"🔍 RSS {rss_url} -> status={feed.get('status')} "
+        f"entries={len(feed.entries)} bozo={feed.bozo} "
+        f"({feed.get('bozo_exception') if feed.bozo else 'ok'})"
+    )
 
     for entry in feed.entries:
         title = entry.title
@@ -129,6 +142,8 @@ for rss_url in rss_list:
             "source": source,
             "link": entry.link,
         })
+
+print(f"🔍 news_list 總筆數：{len(news_list)}")
 
 # ====== 5️⃣ 打分 + 排序 ======
 
@@ -237,6 +252,19 @@ if GEMINI_API_KEY and cat_summaries:
 
 children_blocks = []
 
+if not any(categories.values()):
+    print("⚠️ 今日沒有抓到任何新聞（RSS 可能被來源阻擋或回傳空結果），將建立警示頁面")
+    children_blocks.append({
+        "object": "block",
+        "type": "paragraph",
+        "paragraph": {
+            "rich_text": [{
+                "type": "text",
+                "text": {"content": "⚠️ 今日未抓到任何新聞，請檢查 RSS 來源是否被阻擋或執行紀錄。"}
+            }]
+        }
+    })
+
 for cat, items in categories.items():
     if not items:
         continue
@@ -291,7 +319,6 @@ response = notion.pages.create(
     parent={"database_id": DATABASE_ID},
     properties={
         "Name": {"title": [{"text": {"content": f"Daily News — {today}"}}]},
-        "Created": {"date": {"start": today}},
         "Status": {"select": {"name": "Unread"}}
     },
     children=children_blocks
