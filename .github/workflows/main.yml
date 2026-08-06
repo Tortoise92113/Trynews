@@ -1,9 +1,9 @@
 name: Run Trynews
 
 on:
-  # schedule:
+  schedule:
    #- cron: "*/5 * * * *"
-   #- cron: "34 5 * * *"
+   - cron: "34 5 * * *"
   workflow_dispatch:
 
 jobs:
